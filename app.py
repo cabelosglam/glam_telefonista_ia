@@ -12,7 +12,9 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
 
-VOICE = os.getenv("GLAM_TTS_VOICE", "Google.pt-BR-Chirp3-HD-Charon")
+# Voz e idioma (pode trocar por env var no Render)
+VOICE = os.getenv("GLAM_TTS_VOICE", "Google.pt-BR-Chirp3-HD-Charon")  # ex.: Polly.Camila-Neural
+LANG = "pt-BR"
 
 # Validate environment
 missing = [k for k, v in {
@@ -65,8 +67,8 @@ def not_extensionist(txt: str) -> bool:
 
 def short_city_comment(city: str) -> str:
     """
-    Uses OpenAI to generate a short, friendly quip about the city in pt-BR.
-    Falls back to a tiny curated map if API is unavailable.
+    Usa OpenAI para gerar uma frase curtinha e espirituosa sobre a cidade (pt-BR).
+    Se a API não estiver disponível, usa um fallback local.
     """
     city_clean = city.strip()
     if not city_clean:
@@ -87,7 +89,10 @@ def short_city_comment(city: str) -> str:
         return fallback.get(key, f"Que bacana, {city_clean} tem um cenário de beleza que só cresce!")
 
     try:
-        prompt = f"Gere UMA frase curtinha, simpática e espirituosa (no máximo 15 palavras) sobre a cidade '{city_clean}' em português do Brasil. Evite clichês óbvios demais, nada ofensivo."
+        prompt = (
+            f"Gere UMA frase curtinha, simpática e espirituosa (no máximo 15 palavras) sobre a cidade "
+            f"'{city_clean}' em português do Brasil. Evite clichês óbvios demais, nada ofensivo."
+        )
         resp = openai_client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
@@ -110,12 +115,12 @@ def ask_with_gather(vr: VoiceResponse, prompt_text: str, action_url: str, speech
         input="speech",
         action=action_url,
         method="POST",
-        language="pt-BR",
+        language=LANG,
         speechTimeout=speech_timeout
     )
-    gather.say(prompt_text, language="pt-BR")
+    gather.say(prompt_text, language=LANG, voice=VOICE)
     vr.append(gather)
-    vr.say("Não consegui te ouvir. Vamos tentar de novo.", language="pt-BR")
+    vr.say("Não consegui te ouvir. Vamos tentar de novo.", language=LANG, voice=VOICE)
     vr.redirect(action_url)
     return vr
 
@@ -161,7 +166,7 @@ def voice():
     answers = CALL_STATE[call_sid]["answers"]
 
     if state == "ask_extensionist" and not next_step:
-        vr.say("Olá! Aqui é a Pat Glam, da Glam Hair Brand. Tudo bem com você?", language="pt-BR")
+        vr.say("Olá! Aqui é a Pat Glam, da Glam Hair Brand. Tudo bem com você?", language=LANG, voice=VOICE)
         return ask_with_gather(
             vr,
             "Me conta: você já é extensionista?",
@@ -196,7 +201,7 @@ def voice():
         city = speech or "sua cidade"
         answers["city"] = city
         quip = short_city_comment(city)
-        vr.say(quip, language="pt-BR")
+        vr.say(quip, language=LANG, voice=VOICE)
         CALL_STATE[call_sid]["state"] = "ask_whatsapp"
         return ask_with_gather(
             vr,
@@ -206,7 +211,7 @@ def voice():
 
     if next_step == "interest":
         if said_no(speech):
-            vr.say("Sem problemas! Obrigado pelo seu tempo. Um abraço da Glam!", language="pt-BR")
+            vr.say("Sem problemas! Obrigado pelo seu tempo. Um abraço da Glam!", language=LANG, voice=VOICE)
             vr.hangup()
             CALL_STATE.pop(call_sid, None)
             return str(vr)
@@ -228,10 +233,10 @@ def voice():
     if next_step == "whatsapp_consent":
         if said_yes(speech):
             answers["whatsapp_ok"] = True
-            vr.say("Perfeito! Um consultor da Glam vai te chamar no WhatsApp. Obrigado e até já!", language="pt-BR")
+            vr.say("Perfeito! Um consultor da Glam vai te chamar no WhatsApp. Obrigado e até já!", language=LANG, voice=VOICE)
             vr.hangup()
         else:
-            vr.say("Tudo bem! Obrigado pelo seu tempo. Qualquer coisa, estamos por aqui. Tchau!", language="pt-BR")
+            vr.say("Tudo bem! Obrigado pelo seu tempo. Qualquer coisa, estamos por aqui. Tchau!", language=LANG, voice=VOICE)
             vr.hangup()
         print(f"[LEAD] CallSid={call_sid} | Answers={answers}")
         CALL_STATE.pop(call_sid, None)
