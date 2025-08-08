@@ -12,6 +12,8 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
 
+VOICE = os.getenv("GLAM_TTS_VOICE", "Google.pt-BR-Chirp3-HD-Charon")
+
 # Validate environment
 missing = [k for k, v in {
     "OPENAI_API_KEY": OPENAI_API_KEY,
