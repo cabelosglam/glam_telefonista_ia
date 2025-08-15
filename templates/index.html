@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Teste de Ligação — IA Realtime + Twilio</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}">
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+    <img src="{{ url_for('static', path='images/logo.png') }}" alt="Glam Hair" class="brand" />
+
+      <header class="card__header">
+
+        <div class="badge">Realtime</div>
+        <h1>Teste de Ligação</h1>
+        <p class="lead">
+          Digite um número no formato <strong>E.164</strong> (ex.: <code>+5562987654321</code>) e clique em <em>Ligar</em>.
+          Sua IA atende usando Twilio + OpenAI Realtime.
+        </p>
+      </header>
+
+      <form id="callForm" class="form" autocomplete="on" novalidate>
+        <div class="field">
+          <label for="name">Nome do contato</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="Ex.: Fillipe"
+            autocomplete="name"
+          />
+          <label for="to">Número para ligar</label>
+          <input
+            id="to"
+            name="to"
+            type="tel"
+            inputmode="tel"
+            placeholder="+5562XXXXXXXX"
+            autocomplete="tel"
+            aria-describedby="toHint"
+            required
+          />
+          <small id="toHint" class="hint">Conta trial? O número precisa estar verificado na Twilio.</small>
+        </div>
+
+        <div class="actions">
+          <button id="callBtn" type="submit" class="btn">
+            <span class="btn__icon" aria-hidden="true">📞</span>
+            <span class="btn__text">Ligar</span>
+          </button>
+        </div>
+      </form>
+
+      <section class="status" id="status" role="status" aria-live="polite"></section>
+
+      <div class="log" id="log" aria-live="polite" aria-atomic="false"></div>
+
+      <footer class="footer muted">
+        Webhooks: <code>/incoming-call</code> (TwiML) &middot; <code>/media-stream</code> (WebSocket)
+      </footer>
+    </section>
+  </main>
+
+  <!-- JS -->
+  <script defer src="{{ url_for('static', path='js/index.js') }}"></script>
+</body>
+</html>

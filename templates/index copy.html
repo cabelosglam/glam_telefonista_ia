@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Teste de Ligação — IA Realtime + Twilio</title>
+  <style>
+    :root { color-scheme: dark light; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
+    .wrap { max-width: 720px; margin: 5vh auto; padding: 24px; }
+    .card {
+      border: 1px solid rgba(0,0,0,.1);
+      border-radius: 16px; padding: 24px;
+      box-shadow: 0 6px 26px rgba(0,0,0,.06);
+      background: rgba(255,255,255,.6); backdrop-filter: blur(6px);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 16px; opacity: .8; }
+    label { font-weight: 600; display:block; margin-bottom: 8px; }
+    input[type="tel"]{
+      width: 100%; padding: 14px 16px; font-size: 16px;
+      border-radius: 12px; border: 1px solid #c9c9c9; outline: none;
+    }
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 14px; }
+    button {
+      padding: 12px 18px; border: 0; border-radius: 12px; cursor: pointer;
+      background: #111; color: #fff; font-weight: 700; font-size: 15px;
+    }
+    button[disabled]{ opacity:.6; cursor:not-allowed; }
+    .muted { font-size: 13px; opacity: .7; }
+    .log {
+      margin-top: 18px; padding: 14px; border-radius: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #0e1116; color: #e6edf3; max-height: 240px; overflow: auto; font-size: 13px;
+      border: 1px solid #1f2328;
+    }
+    .ok { color: #2ecc71 }
+    .err { color: #ff6961 }
+    .hint { font-size: 13px; opacity: .75; margin-top: 10px }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Teste de Ligação</h1>
+      <p>Digite um número no formato <strong>E.164</strong> (ex.: <code>+5562987654321</code>) e clique em <em>Ligar</em>. Sua IA atenderá do outro lado usando Twilio + OpenAI Realtime.</p>
+
+      <div class="row">
+        <div style="flex:1">
+          <label for="to">Número para ligar</label>
+          <input id="to" type="tel" placeholder="+5562XXXXXXXX" autocomplete="tel" />
+          <div class="hint">Dica: em conta trial, o número precisa estar verificado na Twilio.</div>
+        </div>
+        <div>
+          <button id="callBtn">Ligar</button>
+        </div>
+      </div>
+
+      <div class="log" id="log"></div>
+      <p class="muted">Webhooks usados: <code>/incoming-call</code> (TwiML) e <code>/media-stream</code> (WebSocket).</p>
+    </div>
+  </div>
+
+  <script>
+    const $btn = document.getElementById('callBtn');
+    const $to  = document.getElementById('to');
+    const $log = document.getElementById('log');
+
+    function log(msg, cls="") {
+      const line = document.createElement('div');
+      if (cls) line.className = cls;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      $log.prepend(line);
+    }
+
+    async function startCall() {
+      const to = $to.value.trim();
+      if (!to.startsWith('+')) {
+        log('Número inválido. Use formato E.164, ex.: +5562...', 'err');
+        return;
+      }
+      $btn.disabled = true;
+      log(`Iniciando ligação para ${to}...`);
+
+      try {
+        const res = await fetch('/api/call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to })
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+          log(`Falha ao iniciar: ${data.error || res.statusText}`, 'err');
+        } else {
+          log(`Ligação criada. SID: ${data.sid}`, 'ok');
+          log('Atenda a chamada e fale com a IA 😄', 'ok');
+        }
+      } catch (err) {
+        log(`Erro de rede: ${err.message}`, 'err');
+      } finally {
+        $btn.disabled = false;
+      }
+    }
+
+    $btn.addEventListener('click', startCall);
+    $to.addEventListener('keydown', e => { if (e.key === 'Enter') startCall(); });
+  </script>
+</body>
+</html>
